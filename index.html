@@ -3,36 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Faltas - Alerta Escolar</title>
+    <title>Sistema de Gestão de Faltas - Fênix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 700; }
         
-        /* Cores de Alerta */
-        .alerta-amarelo { background-color: #fef08a; color: #854d0e; } /* 3 faltas mês */
-        .alerta-laranja { background-color: #fed7aa; color: #9a3412; } /* 5 faltas mês */
-        .alerta-vermelho { background-color: #fecaca; color: #991b1b; } /* 7 faltas mês */
+        /* Cores de Alerta Pedagógico */
+        .alerta-amarelo { background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; } 
+        .alerta-laranja { background-color: #fed7aa; color: #9a3412; border: 1px solid #f97316; } 
+        .alerta-vermelho { background-color: #fecaca; color: #991b1b; border: 1px solid #ef4444; } 
         .alerta-critico { 
             background: linear-gradient(45deg, #fef08a, #fecaca); 
             border: 2px solid #991b1b;
+            color: #991b1b;
             animation: pulse 2s infinite;
-        } /* 3 na semana */
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { opacity: 1; }
         }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
 
-    <nav class="glass sticky top-0 z-50 border-b border-slate-200 px-4 py-3 shadow-sm">
+    <nav class="glass sticky top-0 z-50 border-b border-slate-200 px-4 py-3 shadow-sm no-print">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="flex items-center gap-2 font-bold text-xl text-blue-700">
-                <i data-lucide="shield-alert"></i> Gestão de Faltas
+                <i data-lucide="shield-alert"></i> Monitoramento de Faltas
             </h1>
             <div class="flex gap-6">
                 <button onclick="switchTab('registro')" id="btn-reg" class="tab-active py-1 transition">Registrar</button>
@@ -43,48 +41,52 @@
 
     <main class="max-w-4xl mx-auto p-4 mt-6">
         
-        <section id="aba-registro" class="space-y-6">
+        <section id="aba-registro" class="space-y-6 no-print">
             <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-slate-700">
+                    <i data-lucide="pen-tool"></i> Nova Ocorrência
+                </h2>
                 <form id="formRegistro" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-600">Turma</label>
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">1. Selecione a Turma</label>
                         <select id="selectTurma" onchange="filtrarAlunos()" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Carregando...</option>
+                            <option value="">Carregando turmas...</option>
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-600">Aluno</label>
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">2. Selecione o Aluno</label>
                         <select id="selectAluno" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Selecione a turma</option>
+                            <option value="">Aguardando turma...</option>
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-600">Data da Falta</label>
-                        <input type="date" id="dataFalta" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">3. Data da Falta</label>
+                        <input type="date" id="dataFalta" required class="w-full p-3 rounded-xl border border-slate-200">
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-600">Responsável que informou</label>
-                        <input type="text" id="responsavel" required placeholder="Mãe, Pai, etc." class="w-full p-3 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">4. Responsável Informante</label>
+                        <input type="text" id="responsavel" required placeholder="Ex: Mãe / Pai / Tio" class="w-full p-3 rounded-xl border border-slate-200">
                     </div>
                     <div class="md:col-span-2 space-y-2">
-                        <label class="text-sm font-semibold text-slate-600">Motivo</label>
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">5. Motivo Principal</label>
                         <select id="motivo" class="w-full p-3 rounded-xl border border-slate-200">
-                            <option value="Doença">Doença</option>
-                            <option value="Questões Pessoais">Questões Pessoais</option>
-                            <option value="Transporte">Transporte</option>
-                            <option value="Sem Justificativa">Sem Justificativa</option>
+                            <option value="Doença">Doença (Atestado/Sintomas)</option>
+                            <option value="Questões Pessoais">Questões Pessoais/Familiares</option>
+                            <option value="Transporte">Problemas com Transporte</option>
+                            <option value="Luto">Luto</option>
+                            <option value="Outros">Outros (especificar nas observações)</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2 space-y-2 text-slate-600">
-                        <label class="text-sm font-semibold">Observações</label>
-                        <textarea id="obs" class="w-full p-3 rounded-xl border border-slate-200 h-24"></textarea>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">6. Observações Detalhadas</label>
+                        <textarea id="obs" placeholder="Descreva aqui detalhes da conversa..." class="w-full p-3 rounded-xl border border-slate-200 h-24"></textarea>
                     </div>
                     <div class="md:col-span-2 space-y-2 border-t pt-4">
-                        <label class="text-sm font-semibold">Seu Nome (Servidor)</label>
-                        <input type="text" id="servidor" required class="w-full p-3 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">7. Servidor Responsável pelo Registro</label>
+                        <input type="text" id="servidor" required placeholder="Seu nome completo" class="w-full p-3 rounded-xl border border-slate-200">
                     </div>
-                    <button type="submit" id="btnSalvar" class="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
-                        <i data-lucide="save"></i> SALVAR REGISTRO
+                    <button type="submit" id="btnSalvar" class="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-2">
+                        <i data-lucide="check-circle"></i> FINALIZAR E SALVAR
                     </button>
                 </form>
             </div>
@@ -92,57 +94,84 @@
 
         <section id="aba-pesquisa" class="hidden">
             <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-                    <input type="text" id="buscaNome" placeholder="Nome do aluno..." class="p-3 rounded-xl border border-slate-200 outline-none">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 no-print">
+                    <input type="text" id="buscaNome" placeholder="Nome do aluno..." class="p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
                     <div class="flex gap-2">
                         <input type="date" id="dataInicio" class="w-full p-3 rounded-xl border border-slate-200 text-xs">
                         <input type="date" id="dataFim" class="w-full p-3 rounded-xl border border-slate-200 text-xs">
                     </div>
-                    <button onclick="buscarRegistros()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">
-                        Gerar Relatório
+                    <button onclick="buscarRegistros()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition flex items-center justify-center gap-2">
+                        <i data-lucide="filter"></i> Filtrar
                     </button>
                 </div>
 
+                <div id="statusFiltro" class="mb-4 text-sm font-bold text-blue-600"></div>
+
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-slate-400 text-xs border-b">
+                            <tr class="text-slate-400 text-xs uppercase border-b border-slate-100">
                                 <th class="p-4">Data</th>
-                                <th class="p-4">Aluno</th>
-                                <th class="p-4">Alerta</th>
+                                <th class="p-4">Aluno / Turma</th>
+                                <th class="p-4 text-center">Nível de Alerta</th>
                                 <th class="p-4">Motivo</th>
                             </tr>
                         </thead>
-                        <tbody id="corpoTabela" class="text-sm"></tbody>
+                        <tbody id="corpoTabela" class="text-sm divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
-                <button onclick="window.print()" class="mt-6 flex items-center gap-2 text-slate-400 hover:text-blue-600 text-xs">
-                    <i data-lucide="printer" class="w-4"></i> Imprimir Relatório
+                
+                <div class="mt-8 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 no-print">
+                    <p class="text-[10px] text-slate-500 mb-2 font-bold uppercase">Legenda de Gravidade:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="alerta-amarelo px-2 py-1 rounded text-[9px] font-bold">3 Faltas/Mês</span>
+                        <span class="alerta-laranja px-2 py-1 rounded text-[9px] font-bold">5 Faltas/Mês</span>
+                        <span class="alerta-vermelho px-2 py-1 rounded text-[9px] font-bold">7 Faltas/Mês</span>
+                        <span class="alerta-critico px-2 py-1 rounded text-[9px] font-bold">3 Faltas na Semana</span>
+                    </div>
+                </div>
+
+                <button onclick="window.print()" class="mt-6 no-print flex items-center gap-2 text-slate-400 hover:text-blue-600 text-xs transition">
+                    <i data-lucide="printer" class="w-4"></i> Imprimir ou Salvar PDF
                 </button>
             </div>
         </section>
     </main>
 
     <script>
+        // SUBSTITUA ABAIXO PELO SEU LINK DO GOOGLE SCRIPT (WEB APP)
         const API_URL = "https://script.google.com/macros/s/AKfycbwqxPMqktAVRQlRHsdAc-33f_AA0WnAOPe4p2eY320P-A7ZAYcMhleYhsFYRyAcKxs/exec";
+        
         let listaAlunos = [];
 
         window.onload = async () => {
             lucide.createIcons();
             document.getElementById('dataFalta').valueAsDate = new Date();
-            const resT = await fetch(API_URL + "?aba=Turmas").then(r => r.json());
-            const resA = await fetch(API_URL + "?aba=Alunos").then(r => r.json());
-            const selT = document.getElementById('selectTurma');
-            selT.innerHTML = '<option value="">Escolha a Turma</option>';
-            resT.forEach(t => selT.add(new Option(t.TURMA, t.TURMA)));
-            listaAlunos = resA;
+            
+            try {
+                const [resT, resA] = await Promise.all([
+                    fetch(API_URL + "?aba=Turmas").then(r => r.json()),
+                    fetch(API_URL + "?aba=Alunos").then(r => r.json())
+                ]);
+                
+                const selT = document.getElementById('selectTurma');
+                selT.innerHTML = '<option value="">Escolha a Turma</option>';
+                resT.forEach(t => selT.add(new Option(t.TURMA, t.TURMA)));
+                listaAlunos = resA;
+            } catch (e) {
+                alert("Erro ao carregar dados. Verifique se o link do Script está correto e publicado para 'Qualquer Pessoa'.");
+                console.error(e);
+            }
         };
 
         function filtrarAlunos() {
-            const t = document.getElementById('selectTurma').value;
+            const turmaSel = document.getElementById('selectTurma').value;
             const selA = document.getElementById('selectAluno');
             selA.innerHTML = '<option value="">Selecione o Aluno</option>';
-            listaAlunos.filter(a => a.TURMA === t).forEach(a => selA.add(new Option(a.NOME, a.NOME)));
+            
+            listaAlunos
+                .filter(a => String(a.TURMA).trim() === String(turmaSel).trim())
+                .forEach(a => selA.add(new Option(a.NOME, a.NOME)));
         }
 
         function switchTab(tab) {
@@ -155,7 +184,10 @@
         document.getElementById('formRegistro').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
-            btn.disabled = true; btn.innerText = "Gravando...";
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4"></i> SALVANDO...';
+            lucide.createIcons();
+
             const dados = {
                 turma: document.getElementById('selectTurma').value,
                 aluno: document.getElementById('selectAluno').value,
@@ -165,71 +197,90 @@
                 obs: document.getElementById('obs').value,
                 servidor: document.getElementById('servidor').value
             };
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
-            alert("Registrado com sucesso!");
-            location.reload();
+
+            try {
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
+                alert("REGISTRO SALVO COM SUCESSO!");
+                location.reload();
+            } catch (err) {
+                alert("Erro ao salvar. Tente novamente.");
+                btn.disabled = false;
+                btn.innerText = "FINALIZAR E SALVAR";
+            }
         };
 
         async function buscarRegistros() {
             const corpo = document.getElementById('corpoTabela');
-            corpo.innerHTML = "Processando...";
-            const registros = await fetch(API_URL + "?aba=Registros").then(r => r.json());
+            const status = document.getElementById('statusFiltro');
+            corpo.innerHTML = "<tr><td colspan='4' class='py-12 text-center text-slate-400 animate-pulse font-bold'>Analisando histórico e calculando alertas...</td></tr>";
             
-            const busca = document.getElementById('buscaNome').value.toLowerCase();
-            const dInicio = document.getElementById('dataInicio').value;
-            const dFim = document.getElementById('dataFim').value;
-            
-            const hoje = new Date();
-            const seteDiasAtras = new Date();
-            seteDiasAtras.setDate(hoje.getDate() - 7);
-            const mesAtual = hoje.getMonth();
+            try {
+                const registros = await fetch(API_URL + "?aba=Registros").then(r => r.json());
+                const busca = document.getElementById('buscaNome').value.toLowerCase();
+                const dInicio = document.getElementById('dataInicio').value;
+                const dFim = document.getElementById('dataFim').value;
 
-            corpo.innerHTML = "";
-            
-            // Filtro e Cálculo de Alertas
-            const filtrados = registros.filter(r => {
-                const d = r.DATA.split('T')[0];
-                return r.ALUNO.toLowerCase().includes(busca) && (!dInicio || d >= dInicio) && (!dFim || d <= dFim);
-            });
+                const hoje = new Date();
+                const seteDiasAtras = new Date();
+                seteDiasAtras.setDate(hoje.getDate() - 7);
+                const mesAtual = hoje.getMonth();
 
-            registros.reverse().forEach(r => {
-                if(!filtrados.includes(r)) return;
+                const filtrados = registros.filter(r => {
+                    const dStr = r.DATA.split('T')[0];
+                    return r.ALUNO.toLowerCase().includes(busca) && (!dInicio || dStr >= dInicio) && (!dFim || dStr <= dFim);
+                });
 
-                // Lógica de Alertas por Aluno
-                const faltasDoAluno = registros.filter(x => x.ALUNO === r.ALUNO);
-                const faltasMes = faltasDoAluno.filter(x => new Date(x.DATA).getMonth() === mesAtual).length;
-                const faltasSemana = faltasDoAluno.filter(x => new Date(x.DATA) >= seteDiasAtras).length;
+                corpo.innerHTML = "";
+                status.innerText = `Exibindo ${filtrados.length} ocorrências encontradas.`;
 
-                let classeAlerta = "";
-                let textoAlerta = "Normal";
+                filtrados.reverse().forEach(r => {
+                    // Cálculos de Alerta
+                    const todasDoAluno = registros.filter(x => x.ALUNO === r.ALUNO);
+                    const faltasMes = todasDoAluno.filter(x => new Date(x.DATA).getMonth() === mesAtual).length;
+                    const faltasSemana = todasDoAluno.filter(x => new Date(x.DATA) >= seteDiasAtras).length;
 
-                if (faltasSemana >= 3) {
-                    classeAlerta = "alerta-critico";
-                    textoAlerta = "CRÍTICO: 3+ NA SEMANA";
-                } else if (faltasMes >= 7) {
-                    classeAlerta = "alerta-vermelho";
-                    textoAlerta = "ALTO: 7+ NO MÊS";
-                } else if (faltasMes >= 5) {
-                    classeAlerta = "alerta-laranja";
-                    textoAlerta = "MÉDIO: 5+ NO MÊS";
-                } else if (faltasMes >= 3) {
-                    classeAlerta = "alerta-amarelo";
-                    textoAlerta = "INICIAL: 3 NO MÊS";
-                }
+                    let classe = "bg-slate-100 text-slate-500";
+                    let texto = "NORMAL";
 
-                corpo.innerHTML += `
-                    <tr class="border-b border-slate-50">
-                        <td class="p-4 text-slate-500">${r.DATA.split('T')[0]}</td>
-                        <td class="p-4 font-bold text-slate-800">${r.ALUNO}<br><span class="text-[10px] font-normal text-slate-400">${r.TURMA}</span></td>
-                        <td class="p-4">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black ${classeAlerta}">
-                                ${textoAlerta}
-                            </span>
-                        </td>
-                        <td class="p-4 text-xs italic text-slate-400">${r.MOTIVO}</td>
-                    </tr>
-                `;
-            });
+                    // PRIORIDADE 1: 3 na Semana (Crítico)
+                    if (faltasSemana >= 3) {
+                        classe = "alerta-critico";
+                        texto = "⚠️ CRÍTICO: +3 SEMANA";
+                    } 
+                    // PRIORIDADE 2: Escala Mensal
+                    else if (faltasMes >= 7) {
+                        classe = "alerta-vermelho";
+                        texto = "MUITO ALTO: +7 MÊS";
+                    } else if (faltasMes >= 5) {
+                        classe = "alerta-laranja";
+                        texto = "MÉDIO: 5 MÊS";
+                    } else if (faltasMes >= 3) {
+                        classe = "alerta-amarelo";
+                        texto = "INICIAL: 3 MÊS";
+                    }
+
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 text-slate-400 font-mono text-xs">${r.DATA.split('T')[0]}</td>
+                            <td class="p-4 font-bold text-slate-700">
+                                ${r.ALUNO}<br>
+                                <span class="text-[10px] font-normal text-slate-400 uppercase tracking-tighter">${r.TURMA}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="px-3 py-1.5 rounded-full text-[9px] font-black uppercase shadow-sm ${classe}">
+                                    ${texto}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-slate-600 font-medium">${r.MOTIVO}</div>
+                                <div class="text-[10px] text-slate-400 italic">Inf: ${r.RESPONSAVEL || 'Não informado'}</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                corpo.innerHTML = "<tr><td colspan='4' class='text-center py-10 text-red-500 font-bold'>Erro ao buscar dados. Recarregue a página.</td></tr>";
+            }
         }
     </script>
 </body>
