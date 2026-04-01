@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Faltas - Alerta Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 700; }
+        
+        /* Cores de Alerta */
+        .alerta-amarelo { background-color: #fef08a; color: #854d0e; } /* 3 faltas mês */
+        .alerta-laranja { background-color: #fed7aa; color: #9a3412; } /* 5 faltas mês */
+        .alerta-vermelho { background-color: #fecaca; color: #991b1b; } /* 7 faltas mês */
+        .alerta-critico { 
+            background: linear-gradient(45deg, #fef08a, #fecaca); 
+            border: 2px solid #991b1b;
+            animation: pulse 2s infinite;
+        } /* 3 na semana */
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900">
+
+    <nav class="glass sticky top-0 z-50 border-b border-slate-200 px-4 py-3 shadow-sm">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="flex items-center gap-2 font-bold text-xl text-blue-700">
+                <i data-lucide="shield-alert"></i> Gestão de Faltas
+            </h1>
+            <div class="flex gap-6">
+                <button onclick="switchTab('registro')" id="btn-reg" class="tab-active py-1 transition">Registrar</button>
+                <button onclick="switchTab('pesquisa')" id="btn-pesq" class="py-1 text-slate-500 hover:text-blue-600 transition">Relatórios</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-4 mt-6">
+        
+        <section id="aba-registro" class="space-y-6">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                <form id="formRegistro" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-600">Turma</label>
+                        <select id="selectTurma" onchange="filtrarAlunos()" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-600">Aluno</label>
+                        <select id="selectAluno" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecione a turma</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-600">Data da Falta</label>
+                        <input type="date" id="dataFalta" required class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-600">Responsável que informou</label>
+                        <input type="text" id="responsavel" required placeholder="Mãe, Pai, etc." class="w-full p-3 rounded-xl border border-slate-200">
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-sm font-semibold text-slate-600">Motivo</label>
+                        <select id="motivo" class="w-full p-3 rounded-xl border border-slate-200">
+                            <option value="Doença">Doença</option>
+                            <option value="Questões Pessoais">Questões Pessoais</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Sem Justificativa">Sem Justificativa</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 space-y-2 text-slate-600">
+                        <label class="text-sm font-semibold">Observações</label>
+                        <textarea id="obs" class="w-full p-3 rounded-xl border border-slate-200 h-24"></textarea>
+                    </div>
+                    <div class="md:col-span-2 space-y-2 border-t pt-4">
+                        <label class="text-sm font-semibold">Seu Nome (Servidor)</label>
+                        <input type="text" id="servidor" required class="w-full p-3 rounded-xl border border-slate-200">
+                    </div>
+                    <button type="submit" id="btnSalvar" class="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
+                        <i data-lucide="save"></i> SALVAR REGISTRO
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section id="aba-pesquisa" class="hidden">
+            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                    <input type="text" id="buscaNome" placeholder="Nome do aluno..." class="p-3 rounded-xl border border-slate-200 outline-none">
+                    <div class="flex gap-2">
+                        <input type="date" id="dataInicio" class="w-full p-3 rounded-xl border border-slate-200 text-xs">
+                        <input type="date" id="dataFim" class="w-full p-3 rounded-xl border border-slate-200 text-xs">
+                    </div>
+                    <button onclick="buscarRegistros()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">
+                        Gerar Relatório
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-slate-400 text-xs border-b">
+                                <th class="p-4">Data</th>
+                                <th class="p-4">Aluno</th>
+                                <th class="p-4">Alerta</th>
+                                <th class="p-4">Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabela" class="text-sm"></tbody>
+                    </table>
+                </div>
+                <button onclick="window.print()" class="mt-6 flex items-center gap-2 text-slate-400 hover:text-blue-600 text-xs">
+                    <i data-lucide="printer" class="w-4"></i> Imprimir Relatório
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwqxPMqktAVRQlRHsdAc-33f_AA0WnAOPe4p2eY320P-A7ZAYcMhleYhsFYRyAcKxs/exec";
+        let listaAlunos = [];
+
+        window.onload = async () => {
+            lucide.createIcons();
+            document.getElementById('dataFalta').valueAsDate = new Date();
+            const resT = await fetch(API_URL + "?aba=Turmas").then(r => r.json());
+            const resA = await fetch(API_URL + "?aba=Alunos").then(r => r.json());
+            const selT = document.getElementById('selectTurma');
+            selT.innerHTML = '<option value="">Escolha a Turma</option>';
+            resT.forEach(t => selT.add(new Option(t.TURMA, t.TURMA)));
+            listaAlunos = resA;
+        };
+
+        function filtrarAlunos() {
+            const t = document.getElementById('selectTurma').value;
+            const selA = document.getElementById('selectAluno');
+            selA.innerHTML = '<option value="">Selecione o Aluno</option>';
+            listaAlunos.filter(a => a.TURMA === t).forEach(a => selA.add(new Option(a.NOME, a.NOME)));
+        }
+
+        function switchTab(tab) {
+            document.getElementById('aba-registro').classList.toggle('hidden', tab !== 'registro');
+            document.getElementById('aba-pesquisa').classList.toggle('hidden', tab !== 'pesquisa');
+            document.getElementById('btn-reg').className = tab === 'registro' ? 'tab-active py-1' : 'text-slate-500 py-1';
+            document.getElementById('btn-pesq').className = tab === 'pesquisa' ? 'tab-active py-1' : 'text-slate-500 py-1';
+        }
+
+        document.getElementById('formRegistro').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvar');
+            btn.disabled = true; btn.innerText = "Gravando...";
+            const dados = {
+                turma: document.getElementById('selectTurma').value,
+                aluno: document.getElementById('selectAluno').value,
+                data: document.getElementById('dataFalta').value,
+                motivo: document.getElementById('motivo').value,
+                responsavel: document.getElementById('responsavel').value,
+                obs: document.getElementById('obs').value,
+                servidor: document.getElementById('servidor').value
+            };
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
+            alert("Registrado com sucesso!");
+            location.reload();
+        };
+
+        async function buscarRegistros() {
+            const corpo = document.getElementById('corpoTabela');
+            corpo.innerHTML = "Processando...";
+            const registros = await fetch(API_URL + "?aba=Registros").then(r => r.json());
+            
+            const busca = document.getElementById('buscaNome').value.toLowerCase();
+            const dInicio = document.getElementById('dataInicio').value;
+            const dFim = document.getElementById('dataFim').value;
+            
+            const hoje = new Date();
+            const seteDiasAtras = new Date();
+            seteDiasAtras.setDate(hoje.getDate() - 7);
+            const mesAtual = hoje.getMonth();
+
+            corpo.innerHTML = "";
+            
+            // Filtro e Cálculo de Alertas
+            const filtrados = registros.filter(r => {
+                const d = r.DATA.split('T')[0];
+                return r.ALUNO.toLowerCase().includes(busca) && (!dInicio || d >= dInicio) && (!dFim || d <= dFim);
+            });
+
+            registros.reverse().forEach(r => {
+                if(!filtrados.includes(r)) return;
+
+                // Lógica de Alertas por Aluno
+                const faltasDoAluno = registros.filter(x => x.ALUNO === r.ALUNO);
+                const faltasMes = faltasDoAluno.filter(x => new Date(x.DATA).getMonth() === mesAtual).length;
+                const faltasSemana = faltasDoAluno.filter(x => new Date(x.DATA) >= seteDiasAtras).length;
+
+                let classeAlerta = "";
+                let textoAlerta = "Normal";
+
+                if (faltasSemana >= 3) {
+                    classeAlerta = "alerta-critico";
+                    textoAlerta = "CRÍTICO: 3+ NA SEMANA";
+                } else if (faltasMes >= 7) {
+                    classeAlerta = "alerta-vermelho";
+                    textoAlerta = "ALTO: 7+ NO MÊS";
+                } else if (faltasMes >= 5) {
+                    classeAlerta = "alerta-laranja";
+                    textoAlerta = "MÉDIO: 5+ NO MÊS";
+                } else if (faltasMes >= 3) {
+                    classeAlerta = "alerta-amarelo";
+                    textoAlerta = "INICIAL: 3 NO MÊS";
+                }
+
+                corpo.innerHTML += `
+                    <tr class="border-b border-slate-50">
+                        <td class="p-4 text-slate-500">${r.DATA.split('T')[0]}</td>
+                        <td class="p-4 font-bold text-slate-800">${r.ALUNO}<br><span class="text-[10px] font-normal text-slate-400">${r.TURMA}</span></td>
+                        <td class="p-4">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black ${classeAlerta}">
+                                ${textoAlerta}
+                            </span>
+                        </td>
+                        <td class="p-4 text-xs italic text-slate-400">${r.MOTIVO}</td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
